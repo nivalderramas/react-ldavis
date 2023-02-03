@@ -81,8 +81,6 @@ export default function LDAvisLegacy(
   var topicID = visID + '-topic'
   var lambdaID = visID + '-lambda'
   var termID = visID + '-term'
-  var topicDown = topicID + '-down'
-  var topicUp = topicID + '-up'
   var topicClear = topicID + '-clear'
 
   //////////////////////////////////////////////////////////////////////////////
@@ -157,55 +155,6 @@ export default function LDAvisLegacy(
     init_forms(topicID, lambdaID, visID)
 
     // When the value of lambda changes, update the visualization
-    d3.select(lambda_select).on('mouseup', function () {
-      // store the previous lambda value
-      lambda.old = lambda.current
-      lambda.current = document.getElementById(lambdaID).value
-      vis_state.lambda = +this.value
-      // adjust the text on the range slider
-      d3.select(lambda_select).property('value', vis_state.lambda)
-      d3.select(lambda_select + '-value').text(vis_state.lambda)
-      // transition the order of the bars
-      var increased = lambda.old < vis_state.lambda
-      if (vis_state.topic > 0) reorder_bars(increased)
-      // store the current lambda value
-      state_save(true)
-      document.getElementById(lambdaID).value = vis_state.lambda
-    })
-
-    d3.select('#' + topicUp).on('click', function () {
-      // remove term selection if it exists (from a saved URL)
-      var termElem = document.getElementById(termID + vis_state.term)
-      if (termElem !== undefined) term_off(termElem)
-      vis_state.term = ''
-      var value_old = document.getElementById(topicID).value
-      var value_new = Math.min(K, +value_old + 1).toFixed(0)
-      // increment the value in the input box
-      document.getElementById(topicID).value = value_new
-      topic_off(document.getElementById(topicID + value_old))
-      var oldtopic = document.getElementById(topicID + value_new)
-      topic_on(oldtopic)
-      vis_state.topic = value_new
-      state_save(true)
-      topic_click(oldtopic, value_new)
-    })
-
-    d3.select('#' + topicDown).on('click', function () {
-      // remove term selection if it exists (from a saved URL)
-      var termElem = document.getElementById(termID + vis_state.term)
-      if (termElem !== undefined) term_off(termElem)
-      vis_state.term = ''
-      var value_old = document.getElementById(topicID).value
-      var value_new = Math.max(0, +value_old - 1).toFixed(0)
-      // increment the value in the input box
-      document.getElementById(topicID).value = value_new
-      topic_off(document.getElementById(topicID + value_old))
-      var oldtopic = document.getElementById(topicID + value_new)
-      topic_on(oldtopic)
-      vis_state.topic = value_new
-      state_save(true)
-      topic_click(oldtopic, value_new)
-    })
 
     d3.select('#' + topicID).on('keyup', function () {
       // remove term selection if it exists (from a saved URL)
@@ -304,36 +253,6 @@ export default function LDAvisLegacy(
         state_save(true)
       })
 
-    mdsplot
-      .append('line') // draw x-axis
-      .attr('x1', 0)
-      .attr('x2', mdswidth)
-      .attr('y1', mdsheight / 2)
-      .attr('y2', mdsheight / 2)
-      .attr('stroke', 'gray')
-      .attr('opacity', 0.3)
-    mdsplot
-      .append('text') // label x-axis
-      .attr('x', 0)
-      .attr('y', mdsheight / 2 - 5)
-      .text(data['plot.opts'].xlab)
-      .attr('fill', 'gray')
-
-    mdsplot
-      .append('line') // draw y-axis
-      .attr('x1', mdswidth / 2)
-      .attr('x2', mdswidth / 2)
-      .attr('y1', 0)
-      .attr('y2', mdsheight)
-      .attr('stroke', 'gray')
-      .attr('opacity', 0.3)
-    mdsplot
-      .append('text') // label y-axis
-      .attr('x', mdswidth / 2 + 5)
-      .attr('y', 7)
-      .text(data['plot.opts'].ylab)
-      .attr('fill', 'gray')
-
     // new definitions based on fixing the sum of the areas of the default topic circles:
     var newSmall = Math.sqrt((0.02 * mdsarea * circle_prop) / Math.PI)
     var newMedium = Math.sqrt((0.05 * mdsarea * circle_prop) / Math.PI)
@@ -343,64 +262,10 @@ export default function LDAvisLegacy(
 
     // circle guide inspired from
     // http://www.nytimes.com/interactive/2012/02/13/us/politics/2013-budget-proposal-graphic.html?_r=0
-    var circleGuide = function (rSize, size) {
-      d3.select('#leftpanel')
-        .append('circle')
-        .attr('class', 'circleGuide' + size)
-        .attr('r', rSize)
-        .attr('cx', cx)
-        .attr('cy', mdsheight + rSize)
-        .style('fill', 'none')
-        .style('stroke-dasharray', '2 2')
-        .style('stroke', '#999')
-      d3.select('#leftpanel')
-        .append('line')
-        .attr('class', 'lineGuide' + size)
-        .attr('x1', cx)
-        .attr('x2', cx2)
-        .attr('y1', mdsheight + 2 * rSize)
-        .attr('y2', mdsheight + 2 * rSize)
-        .style('stroke', 'gray')
-        .style('opacity', 0.3)
-    }
-
-    circleGuide(newSmall, 'Small')
-    circleGuide(newMedium, 'Medium')
-    circleGuide(newLarge, 'Large')
 
     var defaultLabelSmall = '2%'
     var defaultLabelMedium = '5%'
     var defaultLabelLarge = '10%'
-
-    d3.select('#leftpanel')
-      .append('text')
-      .attr('x', 10)
-      .attr('y', mdsheight - 10)
-      .attr('class', 'circleGuideTitle')
-      .style('text-anchor', 'left')
-      .style('fontWeight', 'bold')
-      .text('Marginal topic distribution')
-    d3.select('#leftpanel')
-      .append('text')
-      .attr('x', cx2 + 10)
-      .attr('y', mdsheight + 2 * newSmall)
-      .attr('class', 'circleGuideLabelSmall')
-      .style('text-anchor', 'start')
-      .text(defaultLabelSmall)
-    d3.select('#leftpanel')
-      .append('text')
-      .attr('x', cx2 + 10)
-      .attr('y', mdsheight + 2 * newMedium)
-      .attr('class', 'circleGuideLabelMedium')
-      .style('text-anchor', 'start')
-      .text(defaultLabelMedium)
-    d3.select('#leftpanel')
-      .append('text')
-      .attr('x', cx2 + 10)
-      .attr('y', mdsheight + 2 * newLarge)
-      .attr('class', 'circleGuideLabelLarge')
-      .style('text-anchor', 'start')
-      .text(defaultLabelLarge)
 
     // bind mdsData to the points in the left panel:
     var points = mdsplot.selectAll('points').data(mdsData).enter()
@@ -473,13 +338,13 @@ export default function LDAvisLegacy(
           topic_on(document.getElementById(topicID + vis_state.topic))
       })
 
-    svg
-      .append('text')
-      .text('Intertopic Distance Map (via multidimensional scaling)')
-      .attr('x', mdswidth / 2 + margin.left)
-      .attr('y', 30)
-      .style('font-size', '16px')
-      .style('text-anchor', 'middle')
+    //svg
+    //  .append('text')
+    //  .text('Intertopic Distance Map (via multidimensional scaling)')
+    //  .attr('x', mdswidth / 2 + margin.left)
+    //  .attr('y', 30)
+    //  .style('font-size', '16px')
+    //  .style('text-anchor', 'middle')
 
     // establish layout and vars for bar chart
     var barDefault2 = lamData.filter(function (d) {
@@ -534,7 +399,7 @@ export default function LDAvisLegacy(
       .attr('x', barguide.width + 5)
       .attr('y', mdsheight + 10 + barguide.height / 2)
       .style('dominant-baseline', 'middle')
-      .text('Overall term frequency')
+      .text('Aparición del término en todos los documentos')
 
     d3.select('#bar-freqs')
       .append('rect')
@@ -549,34 +414,36 @@ export default function LDAvisLegacy(
       .attr('x', barguide.width / 2 + 5)
       .attr('y', mdsheight + 10 + (3 / 2) * barguide.height + 5)
       .style('dominant-baseline', 'middle')
-      .text('Estimated term frequency within the selected topic')
+      .text(
+        'Frecuencia de aparición estimada del término en el tema seleccionado'
+      )
 
     // footnotes:
-    d3.select('#bar-freqs')
-      .append('a')
-      .attr('xlink:href', 'http://vis.stanford.edu/files/2012-Termite-AVI.pdf')
-      .attr('target', '_blank')
-      .append('text')
-      .attr('x', 0)
-      .attr('y', mdsheight + 10 + (6 / 2) * barguide.height + 5)
-      .style('dominant-baseline', 'middle')
-      .text(
-        '1. saliency(term w) = frequency(w) * [sum_t p(t | w) * log(p(t | w)/p(t))] for topics t; see Chuang et. al (2012)'
-      )
-    d3.select('#bar-freqs')
-      .append('a')
-      .attr(
-        'xlink:href',
-        'http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf'
-      )
-      .attr('target', '_blank')
-      .append('text')
-      .attr('x', 0)
-      .attr('y', mdsheight + 10 + (8 / 2) * barguide.height + 5)
-      .style('dominant-baseline', 'middle')
-      .text(
-        '2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)'
-      )
+    //d3.select('#bar-freqs')
+    //  .append('a')
+    //  .attr('xlink:href', 'http://vis.stanford.edu/files/2012-Termite-AVI.pdf')
+    //  .attr('target', '_blank')
+    //  .append('text')
+    //  .attr('x', 0)
+    //  .attr('y', mdsheight + 10 + (6 / 2) * barguide.height + 5)
+    //  .style('dominant-baseline', 'middle')
+    //  .text(
+    //    '1. saliency(term w) = frequency(w) * [sum_t p(t | w) * log(p(t | w)/p(t))] for topics t; see Chuang et. al (2012)'
+    //  )
+    //d3.select('#bar-freqs')
+    //  .append('a')
+    //  .attr(
+    //    'xlink:href',
+    //    'http://nlp.stanford.edu/events/illvi2014/papers/sievert-illvi2014.pdf'
+    //  )
+    //  .attr('target', '_blank')
+    //  .append('text')
+    //  .attr('x', 0)
+    //  .attr('y', mdsheight + 10 + (8 / 2) * barguide.height + 5)
+    //  .style('dominant-baseline', 'middle')
+    //  .text(
+    //    '2. relevance(term w | topic t) = \u03BB * p(w | t) + (1 - \u03BB) * p(w | t)/p(w); see Sievert & Shirley (2014)'
+    //  )
 
     // Bind 'default' data to 'default' bar chart
     var basebars = chart.selectAll('.bar-totals').data(barDefault2).enter()
@@ -641,13 +508,12 @@ export default function LDAvisLegacy(
       .attr('class', 'bubble-tool') //  set class so we can remove it when highlight_off is called
       .style('text-anchor', 'middle')
       .style('font-size', '16px')
-      .text('Top-' + R + ' Most Salient Terms')
+      .text('Top-' + R + ' palabras más relevantes')
 
     title
       .append('tspan')
       .attr('baseline-shift', 'super')
       .attr('font-size', '12px')
-      .text('(1)')
 
     // barchart axis adapted from http://bl.ocks.org/mbostock/1166403
     var xAxis = d3.svg
@@ -697,98 +563,11 @@ export default function LDAvisLegacy(
       topicInput.id = topicID
       topicDiv.appendChild(topicInput)
 
-      var previous = document.createElement('button')
-      previous.setAttribute('id', topicDown)
-      previous.setAttribute('style', 'margin-left: 5px; padding: 0')
-      previous.innerHTML = 'Previous Topic'
-      topicDiv.appendChild(previous)
-
-      var next = document.createElement('button')
-      next.setAttribute('id', topicUp)
-      next.setAttribute('style', 'margin-left: 5px; padding: 0')
-      next.innerHTML = 'Next Topic'
-      topicDiv.appendChild(next)
-
       var clear = document.createElement('button')
       clear.setAttribute('id', topicClear)
       clear.setAttribute('style', 'margin-left: 5px; padding: 0')
       clear.innerHTML = 'Clear Topic'
       topicDiv.appendChild(clear)
-
-      // lambda inputs
-      //var lambdaDivLeft = 8 + mdswidth + margin.left + termwidth;
-      var lambdaDivWidth = barwidth
-      var lambdaDiv = document.createElement('div')
-      lambdaDiv.setAttribute('id', 'lambdaInput')
-      lambdaDiv.setAttribute(
-        'style',
-        'padding: 5px; background-color: #e8e8e8; display: inline-block; height: 50px; width: ' +
-          lambdaDivWidth +
-          'px; vertical-align:top; margin-left: ' +
-          termwidth +
-          'px'
-      )
-      inputDiv.appendChild(lambdaDiv)
-
-      var lambdaZero = document.createElement('div')
-      lambdaZero.setAttribute(
-        'style',
-        'padding: 5px; height: 20px; width: 220px; font-family: sans-serif; float: left'
-      )
-      lambdaZero.setAttribute('id', 'lambdaZero')
-      lambdaDiv.appendChild(lambdaZero)
-      var xx = d3
-        .select('#lambdaZero')
-        .append('text')
-        .attr('x', 0)
-        .attr('y', 0)
-        .style('font-size', '14px')
-        .text('Slide to adjust relevance metric:')
-      var yy = d3
-        .select('#lambdaZero')
-        .append('text')
-        .attr('x', 125)
-        .attr('y', -5)
-        .style('font-size', '10px')
-        .style('position', 'absolute')
-        .text('(2)')
-
-      var sliderDiv = document.createElement('div')
-      sliderDiv.setAttribute('id', 'sliderdiv')
-      sliderDiv.setAttribute(
-        'style',
-        'padding: 5px; height: 40px; width: 250px; float: right; margin-top: -5px; margin-right: 10px'
-      )
-      lambdaDiv.appendChild(sliderDiv)
-
-      var lambdaInput = document.createElement('input')
-      lambdaInput.setAttribute(
-        'style',
-        'width: 250px; margin-left: 0px; margin-right: 0px'
-      )
-      lambdaInput.type = 'range'
-      lambdaInput.min = 0
-      lambdaInput.max = 1
-      lambdaInput.step = data['lambda.step']
-      lambdaInput.value = vis_state.lambda
-      lambdaInput.id = lambdaID
-      lambdaInput.setAttribute('list', 'ticks') // to enable automatic ticks (with no labels, see below)
-      sliderDiv.appendChild(lambdaInput)
-
-      var lambdaLabel = document.createElement('label')
-      lambdaLabel.setAttribute('id', 'lamlabel')
-      lambdaLabel.setAttribute('for', lambdaID)
-      lambdaLabel.setAttribute(
-        'style',
-        'height: 20px; width: 60px; font-family: sans-serif; font-size: 14px; margin-left: 80px'
-      )
-      lambdaLabel.innerHTML =
-        "&#955 = <span id='" +
-        lambdaID +
-        "-value'>" +
-        vis_state.lambda +
-        '</span>'
-      lambdaDiv.appendChild(lambdaLabel)
 
       // Create the svg to contain the slider scale:
       var scaleContainer = d3
@@ -1207,11 +986,11 @@ export default function LDAvisLegacy(
         .text(
           'Top-' +
             R +
-            ' Most Relevant Terms for Topic ' +
+            ' palabras más relevantes para el tema ' +
             topics +
             ' (' +
             Freq +
-            '% of tokens)'
+            '% de las palabras)'
         )
 
       // grab the bar-chart data for this topic only:
@@ -1325,12 +1104,11 @@ export default function LDAvisLegacy(
 
       var title = d3
         .selectAll('.bubble-tool')
-        .text('Top-' + R + ' Most Salient Terms')
+        .text('Top-' + R + ' Palabras más relevantes')
       title
         .append('tspan')
         .attr('baseline-shift', 'super')
         .attr('font-size', 12)
-        .text(1)
 
       // remove the red bars
       d3.selectAll('.overlay').remove()
@@ -1482,25 +1260,12 @@ export default function LDAvisLegacy(
 
       // Change sizes of topic numbers:
       d3.selectAll('.txt').transition().style('font-size', '11px')
-
-      // Go back to the default guide
-      d3.select('.circleGuideTitle').text('Marginal topic distribution')
-      d3.select('.circleGuideLabelLarge').text(defaultLabelLarge)
-      d3.select('.circleGuideLabelSmall')
-        .attr('y', mdsheight + 2 * newSmall)
-        .text(defaultLabelSmall)
-      d3.select('.circleGuideSmall')
-        .attr('r', newSmall)
-        .attr('cy', mdsheight + newSmall)
-      d3.select('.lineGuideSmall')
-        .attr('y1', mdsheight + 2 * newSmall)
-        .attr('y2', mdsheight + 2 * newSmall)
     }
 
     // serialize the visualization state using fragment identifiers -- http://en.wikipedia.org/wiki/Fragment_identifier
     // location.hash holds the address information
 
-    var params = location.hash.split('&')
+    var params = window.location.hash.split('&')
     if (params.length > 1) {
       vis_state.topic = params[0].split('=')[1]
       vis_state.lambda = params[1].split('=')[1]
@@ -1546,8 +1311,8 @@ export default function LDAvisLegacy(
 
     function state_url() {
       return (
-        location.origin +
-        location.pathname +
+        window.location.origin +
+        window.location.pathname +
         '#topic=' +
         vis_state.topic +
         '&lambda=' +
@@ -1559,8 +1324,9 @@ export default function LDAvisLegacy(
 
     function state_save(replace) {
       if (mod_history) {
-        if (replace) history.replaceState(vis_state, 'Query', state_url())
-        else history.pushState(vis_state, 'Query', state_url())
+        if (replace)
+          window.history.replaceState(vis_state, 'Query', state_url())
+        else window.history.pushState(vis_state, 'Query', state_url())
       }
     }
 
@@ -1597,8 +1363,8 @@ export default function LDAvisLegacy(
 
       // update shiny inputs to be null
       if (inShinyMode) {
-        Shiny.onInputChange(shinyClickedTopic, null)
-        Shiny.onInputChange(shinyClickedTerm, null)
+        window.Shiny.onInputChange(shinyClickedTopic, null)
+        window.Shiny.onInputChange(shinyClickedTerm, null)
       }
 
       // set state of topic_clicked to 0, so we can click on topic x, reset
@@ -1623,10 +1389,10 @@ export default function LDAvisLegacy(
       vis_state.topic_clicked = newtopic_num
 
       // update shiny topic input object to be new topic clicked
-      Shiny.onInputChange(shinyClickedTopic, newtopic_num)
+      window.Shiny.onInputChange(shinyClickedTopic, newtopic_num)
 
       // since topic changed, we want to reset the input term object back to null
-      Shiny.onInputChange(shinyClickedTerm, null)
+      window.Shiny.onInputChange(shinyClickedTerm, null)
     }
 
     function term_click(newterm, newterm_term) {
@@ -1654,7 +1420,7 @@ export default function LDAvisLegacy(
       vis_state.term_clicked = newterm_term
 
       // update shiny term input object to know about new term clicked
-      Shiny.onInputChange(shinyClickedTerm, newterm_term)
+      window.Shiny.onInputChange(shinyClickedTerm, newterm_term)
     }
   })(json_file)
 }
