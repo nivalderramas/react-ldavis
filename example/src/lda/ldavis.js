@@ -1,5 +1,5 @@
 /* Original code taken from https://github.com/cpsievert/LDAvis */
-/* Copyright 2013, AT&T Intellectual Property */
+/* Copyright (c) 2021 Serhat Seyren */
 /* MIT Licence */
 
 import * as d3 from 'd3'
@@ -327,7 +327,8 @@ export default function LDAvisLegacy(
           topic_off(document.getElementById(old_topic))
         }
         // make sure topic input box value and fragment reflects clicked selection
-        document.getElementById(topicID).value = vis_state.topic = d.topics
+        //document.getElementById(topicID).value = vis_state.topic = d.topics
+        vis_state.topic = d.topics
         state_save(true)
         topic_on(this)
         topic_click(this, d.topics)
@@ -399,7 +400,7 @@ export default function LDAvisLegacy(
       .attr('x', barguide.width + 5)
       .attr('y', mdsheight + 10 + barguide.height / 2)
       .style('dominant-baseline', 'middle')
-      .text('Aparición del término en todos los documentos')
+      .text('Frecuencia de aparición del término en todos los documentos')
 
     d3.select('#bar-freqs')
       .append('rect')
@@ -528,47 +529,6 @@ export default function LDAvisLegacy(
 
     // dynamically create the topic and lambda input forms at the top of the page:
     function init_forms(topicID, lambdaID, visID) {
-      // create container div for topic and lambda input:
-      var inputDiv = document.createElement('div')
-      inputDiv.setAttribute('id', 'top')
-      document.getElementById(visID).appendChild(inputDiv)
-
-      // topic input container:
-      var topicDiv = document.createElement('div')
-      topicDiv.setAttribute(
-        'style',
-        'padding: 5px; background-color: #e8e8e8; display: inline-block; width: ' +
-          mdswidth +
-          'px; height: 50px; vertical-align:top;'
-      )
-      inputDiv.appendChild(topicDiv)
-
-      var topicLabel = document.createElement('label')
-      topicLabel.setAttribute('for', topicID)
-      topicLabel.setAttribute(
-        'style',
-        'font-family: sans-serif; font-size: 14px'
-      )
-      topicLabel.innerHTML =
-        "Selected Topic: <span id='" + topicID + "-value'></span>"
-      topicDiv.appendChild(topicLabel)
-
-      var topicInput = document.createElement('input')
-      topicInput.setAttribute('style', 'width: 50px')
-      topicInput.type = 'text'
-      topicInput.min = '0'
-      topicInput.max = K // assumes the data has already been read in
-      topicInput.step = '1'
-      topicInput.value = '0' // a value of 0 indicates no topic is selected
-      topicInput.id = topicID
-      topicDiv.appendChild(topicInput)
-
-      var clear = document.createElement('button')
-      clear.setAttribute('id', topicClear)
-      clear.setAttribute('style', 'margin-left: 5px; padding: 0')
-      clear.innerHTML = 'Clear Topic'
-      topicDiv.appendChild(clear)
-
       // Create the svg to contain the slider scale:
       var scaleContainer = d3
         .select('#sliderdiv')
@@ -1353,7 +1313,8 @@ export default function LDAvisLegacy(
         term_off(document.getElementById(termID + vis_state.term))
       }
       vis_state.term = ''
-      document.getElementById(topicID).value = vis_state.topic = 0
+      //document.getElementById(topicID).value = vis_state.topic = 0
+      vis_state.topic = 0
       state_save(true)
 
       // make sure term ids are all correct

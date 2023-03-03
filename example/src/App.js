@@ -18,18 +18,6 @@ const App = () => {
 
   return (
     <div>
-      <label>data: </label>
-      <select onChange={(event) => setCurrentData(event.target.value)}>
-        {options}
-      </select>
-
-      <label>modifyHistory: </label>
-      <input
-        type='checkbox'
-        checked={modHis}
-        onChange={(event) => setModHis(event.target.checked)}
-      />
-
       <LDAvis
         data={LDAvisDataList[currentData]}
         modifyHistory={modHis}
